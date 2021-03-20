@@ -146,13 +146,13 @@ var file_PdfComposeService_proto_rawDesc = []byte{
 	0x12, 0x18, 0x0a, 0x07, 0x55, 0x70, 0x46, 0x69, 0x6c, 0x65, 0x33, 0x18, 0x03, 0x20, 0x01, 0x28,
 	0x0c, 0x52, 0x07, 0x55, 0x70, 0x46, 0x69, 0x6c, 0x65, 0x33, 0x22, 0x20, 0x0a, 0x04, 0x46, 0x69,
 	0x6c, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x50, 0x64, 0x66, 0x46, 0x69, 0x6c, 0x65, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x0c, 0x52, 0x07, 0x50, 0x64, 0x66, 0x46, 0x69, 0x6c, 0x65, 0x32, 0x3c, 0x0a, 0x08,
-	0x43, 0x6f, 0x6d, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x12, 0x30, 0x0a, 0x0b, 0x43, 0x6f, 0x6d, 0x70,
+	0x01, 0x28, 0x0c, 0x52, 0x07, 0x50, 0x64, 0x66, 0x46, 0x69, 0x6c, 0x65, 0x32, 0x3e, 0x0a, 0x08,
+	0x43, 0x6f, 0x6d, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x12, 0x32, 0x0a, 0x0b, 0x43, 0x6f, 0x6d, 0x70,
 	0x6f, 0x73, 0x65, 0x46, 0x69, 0x6c, 0x65, 0x12, 0x0f, 0x2e, 0x63, 0x6f, 0x6d, 0x70, 0x6f, 0x73,
 	0x65, 0x72, 0x2e, 0x46, 0x69, 0x6c, 0x65, 0x73, 0x1a, 0x0e, 0x2e, 0x63, 0x6f, 0x6d, 0x70, 0x6f,
-	0x73, 0x65, 0x72, 0x2e, 0x46, 0x69, 0x6c, 0x65, 0x22, 0x00, 0x42, 0x15, 0x5a, 0x13, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x70, 0x64, 0x66, 0x63, 0x6f, 0x6d, 0x70, 0x6f, 0x73,
-	0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x73, 0x65, 0x72, 0x2e, 0x46, 0x69, 0x6c, 0x65, 0x22, 0x00, 0x30, 0x01, 0x42, 0x15, 0x5a, 0x13,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x70, 0x64, 0x66, 0x63, 0x6f, 0x6d, 0x70,
+	0x6f, 0x73, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -245,7 +245,7 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ComposerClient interface {
-	ComposeFile(ctx context.Context, in *Files, opts ...grpc.CallOption) (*File, error)
+	ComposeFile(ctx context.Context, in *Files, opts ...grpc.CallOption) (Composer_ComposeFileClient, error)
 }
 
 type composerClient struct {
@@ -256,59 +256,86 @@ func NewComposerClient(cc grpc.ClientConnInterface) ComposerClient {
 	return &composerClient{cc}
 }
 
-func (c *composerClient) ComposeFile(ctx context.Context, in *Files, opts ...grpc.CallOption) (*File, error) {
-	out := new(File)
-	err := c.cc.Invoke(ctx, "/composer.Composer/ComposeFile", in, out, opts...)
+func (c *composerClient) ComposeFile(ctx context.Context, in *Files, opts ...grpc.CallOption) (Composer_ComposeFileClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Composer_serviceDesc.Streams[0], "/composer.Composer/ComposeFile", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &composerComposeFileClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Composer_ComposeFileClient interface {
+	Recv() (*File, error)
+	grpc.ClientStream
+}
+
+type composerComposeFileClient struct {
+	grpc.ClientStream
+}
+
+func (x *composerComposeFileClient) Recv() (*File, error) {
+	m := new(File)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // ComposerServer is the server API for Composer service.
 type ComposerServer interface {
-	ComposeFile(context.Context, *Files) (*File, error)
+	ComposeFile(*Files, Composer_ComposeFileServer) error
 }
 
 // UnimplementedComposerServer can be embedded to have forward compatible implementations.
 type UnimplementedComposerServer struct {
 }
 
-func (*UnimplementedComposerServer) ComposeFile(context.Context, *Files) (*File, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ComposeFile not implemented")
+func (*UnimplementedComposerServer) ComposeFile(*Files, Composer_ComposeFileServer) error {
+	return status.Errorf(codes.Unimplemented, "method ComposeFile not implemented")
 }
 
 func RegisterComposerServer(s *grpc.Server, srv ComposerServer) {
 	s.RegisterService(&_Composer_serviceDesc, srv)
 }
 
-func _Composer_ComposeFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Files)
-	if err := dec(in); err != nil {
-		return nil, err
+func _Composer_ComposeFile_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(Files)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(ComposerServer).ComposeFile(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/composer.Composer/ComposeFile",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ComposerServer).ComposeFile(ctx, req.(*Files))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(ComposerServer).ComposeFile(m, &composerComposeFileServer{stream})
+}
+
+type Composer_ComposeFileServer interface {
+	Send(*File) error
+	grpc.ServerStream
+}
+
+type composerComposeFileServer struct {
+	grpc.ServerStream
+}
+
+func (x *composerComposeFileServer) Send(m *File) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 var _Composer_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "composer.Composer",
 	HandlerType: (*ComposerServer)(nil),
-	Methods: []grpc.MethodDesc{
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "ComposeFile",
-			Handler:    _Composer_ComposeFile_Handler,
+			StreamName:    "ComposeFile",
+			Handler:       _Composer_ComposeFile_Handler,
+			ServerStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "PdfComposeService.proto",
 }

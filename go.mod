@@ -1,4 +1,4 @@
-module github.com/dalekseenko/pdfcompose
+module github.com/dalekseenko/pdfcompose/v2
 
 go 1.15
 

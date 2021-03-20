@@ -3,7 +3,7 @@ option go_package="protobuf/pdfcompose";
 package composer;
 
 service Composer {
-  rpc ComposeFile (Files) returns (File) {}
+  rpc ComposeFile (Files) returns (stream File) {}
 }
 
 message Files {
