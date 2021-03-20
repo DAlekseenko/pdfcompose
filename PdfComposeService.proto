@@ -1,0 +1,17 @@
+syntax = "proto3";
+option go_package="protobuf/pdfcompose";
+package composer;
+
+service Composer {
+  rpc ComposeFile (Files) returns (File) {}
+}
+
+message Files {
+  bytes UpFile1 = 1;
+  bytes UpFile2 = 2;
+  bytes UpFile3 = 3;
+}
+
+message File {
+  bytes PdfFile = 1;
+}
